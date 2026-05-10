@@ -1,22 +1,42 @@
-name: SSH Terminal
-
+name: Auto SSH 24h
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"  # 每24小时自动运行
+  workflow_dispatch:     # 手动也能点
 
 jobs:
-  build:
+  tmate:
     runs-on: ubuntu-latest
+    timeout-minutes: 1430  # 接近24小时
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: 启动 tmate
+        run: |
+          sudo apt install tmate -y
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+          SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          echo "SSH=$SSH" >> $GITHUB_ENV
+
+      - name: 生成连接页面
+        run: |
+          mkdir -p public
+          echo "<html>
+          <title>SSH 连接</title>
+          <body style='font-size:24px; padding:30px;'>
+          <h3>当前 SSH 命令（复制直接连接）</h3>
+          <code style='color:red;'>${{ env.SSH }}</code>
+          <br><br>
+          <p>每24小时自动更新</p>
+          </body>
+          </html>" > public/index.html
+
+      - name: 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          python-version: "3.11"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: SSH SERVER
-        uses: mxschmitt/action-tmate@v3
+      - name: 保持运行 24 小时
+        run: sleep 1430m
