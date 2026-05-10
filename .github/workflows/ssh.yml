@@ -57,7 +57,7 @@ EOF
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.PAT }}  # 必须用这个
-          external_repository: 用户名/新公有仓库名  # 改成你的
+          external_repository: kerzjz/bbgp  # 改成你的
           publish_dir: ./public
           publish_branch: gh-pages
           allow_empty_commit: true
