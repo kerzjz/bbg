@@ -1,42 +1,51 @@
 name: Auto SSH 24h
 on:
   schedule:
-    - cron: "0 0 * * *"  # 每24小时自动运行
-  workflow_dispatch:     # 手动也能点
+    - cron: "0 0 * * *"
+  workflow_dispatch:
 
 jobs:
   tmate:
     runs-on: ubuntu-latest
-    timeout-minutes: 1430  # 接近24小时
+    timeout-minutes: 1430
     steps:
       - uses: actions/checkout@v4
 
+      - name: 安装 tmate
+        run: sudo apt install tmate -y
+
       - name: 启动 tmate
         run: |
-          sudo apt install tmate -y
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
           SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
-          echo "SSH=$SSH" >> $GITHUB_ENV
+          echo "SSH_CMD=$SSH" >> $GITHUB_ENV
 
-      - name: 生成连接页面
+      - name: 生成网页
         run: |
           mkdir -p public
-          echo "<html>
-          <title>SSH 连接</title>
-          <body style='font-size:24px; padding:30px;'>
-          <h3>当前 SSH 命令（复制直接连接）</h3>
-          <code style='color:red;'>${{ env.SSH }}</code>
-          <br><br>
-          <p>每24小时自动更新</p>
+          cat > public/index.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="utf-8">
+              <title>SSH 连接</title>
+          </head>
+          <body style="font-size:22px; padding:40px;">
+              <h2>当前 SSH 命令</h2>
+              <code style="color:red; font-size:24px;">${{ env.SSH_CMD }}</code>
+              <br><br>
+              <p>每24小时自动刷新</p>
           </body>
-          </html>" > public/index.html
+          </html>
+EOF
 
       - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
+          publish_branch: gh-pages  # 强制推到这个分支
 
-      - name: 保持运行 24 小时
+      - name: 保持运行 24h
         run: sleep 1430m
