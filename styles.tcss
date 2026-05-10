@@ -1,0 +1,52 @@
+/* Bloomberg Terminal Classic Style - Amber on Black */
+Screen {
+    background: #0a0a0a;
+    color: #ffb900;
+}
+
+Header {
+    background: #222222;
+    color: #ffb900;
+    border-bottom: solid 1px #333333;
+}
+
+Footer {
+    background: #222222;
+    color: #ffb900;
+    border-top: solid 1px #333333;
+}
+
+#sidebar {
+    width: 20;
+    background: #0a0a0a;
+    border-right: solid 1px #333333;
+    padding: 1;
+    color: #ffb900;
+}
+
+#main-window {
+    flex: 1;
+    padding: 1;
+    background: #0a0a0a;
+}
+
+#output_log {
+    height: 100%;
+    background: #0a0a0a;
+    color: #ffb900;
+}
+
+Input#command_input {
+    background: #111111;
+    color: #ffb900;
+    border: solid 1px #333333;
+    padding: 0 1;
+}
+
+Input#command_input:focus {
+    border: solid 1px #ffb900;
+}
+
+Static {
+    color: #ffb900;
+}
