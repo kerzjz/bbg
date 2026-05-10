@@ -11,9 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ======================
-      # 自动安装 Python + 依赖
-      # ======================
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -22,7 +19,7 @@ jobs:
       - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # <-- 关键！自动装你的库
+          pip install -r requirements.txt
 
       - name: 安装 tmate
         run: sudo apt install tmate -y
@@ -53,12 +50,17 @@ jobs:
           </html>
 EOF
 
-      - name: 部署到 GitHub Pages
+      # ======================
+      # 核心：推送到 新公有仓库
+      # ======================
+      - name: 部署到新公有 Pages 仓库
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ secrets.PAT }}  # 必须用这个
+          external_repository: 用户名/新公有仓库名  # 改成你的
           publish_dir: ./public
           publish_branch: gh-pages
+          allow_empty_commit: true
 
       - name: 保持运行 24h
         run: sleep 1430m
