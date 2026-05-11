@@ -10,27 +10,35 @@ jobs:
     timeout-minutes: 1430
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: 安装 tmate
         run: sudo apt install tmate -y
+
       - name: 启动 tmate
         run: |
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
           SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH_CMD=$SSH" >> $GITHUB_ENV
-      - name: 生成网页
+
+      - name: 生成纯文本首页（关键修改）
         run: |
           mkdir -p public
-          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>SSH</title></head><body style="font-size:22px;padding:40px;"><h2>当前SSH命令</h2><code style="color:red;font-size:24px;">${{ env.SSH_CMD }}</code><p>每24小时自动刷新</p></body></html>' > public/index.html
-      - name: 部署到公开Pages仓库
+          # 直接把 SSH 地址写入 index.html
+          # 访问根目录自动返回纯文本！
+          echo "${{ env.SSH_CMD }}" > public/index.html
+
+      - name: 部署到 Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.PAT }}
@@ -38,5 +46,6 @@ jobs:
           publish_dir: ./public
           publish_branch: gh-pages
           allow_empty_commit: true
+
       - name: 保持运行24h
         run: sleep 1430m
