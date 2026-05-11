@@ -31,12 +31,11 @@ jobs:
           SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH_CMD=$SSH" >> $GITHUB_ENV
 
-      - name: 生成纯文本首页（关键修改）
+      - name: 生成纯文本首页（只输出地址，不带ssh）
         run: |
           mkdir -p public
-          # 直接把 SSH 地址写入 index.html
-          # 访问根目录自动返回纯文本！
-          echo "${{ env.SSH_CMD }}" > public/index.html
+          # 关键：只保留 xxx@xxx.tmate.io，自动去掉前面的 ssh 
+          echo "${{ env.SSH_CMD }}" | sed 's/^ssh //' > public/index.html
 
       - name: 部署到 Pages
         uses: peaceiris/actions-gh-pages@v4
