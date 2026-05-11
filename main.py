@@ -1,7 +1,13 @@
-# ====================== SSH/tmate 终端自动修复（永久解决点不了+界面怪）======================
+# ====================== SSH/tmate 终端自动修复（云端自动开，本地自动关）======================
 import os
-os.environ["TERM"] = "xterm-256color"  # 修复终端渲染
-os.system("tmate set mouse on 2>/dev/null")  # 自动开启鼠标
+
+# 只有在 GitHub Actions / Linux 云端环境才执行，本地 Windows 绝对不跑！
+if os.environ.get("GITHUB_ACTIONS") == "true" or os.name != "nt":
+    print("✅ 检测到云端环境，自动启用 tmate / 终端修复")
+    os.environ["TERM"] = "xterm-256color"
+    os.system("tmate set mouse on 2>/dev/null")
+else:
+    print("✅ 检测到本地 Windows 环境，跳过 tmate 配置，不炸终端！")
 # ==========================================================================================
 
 # ====================== 自动安装依赖（已存在自动跳过）======================
