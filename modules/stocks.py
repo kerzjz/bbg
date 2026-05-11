@@ -20,6 +20,15 @@ REGION_TO_CURRENCY = {
     "KR": "KRW", "RU": "RUB", "TH": "THB",
 }
 
+GOLD_SINA_MAP = {
+    "AU": "hf_GC",
+    "XAU": "hf_GC",
+    "AG": "hf_SI",
+    "XAG": "hf_SI",
+    "PT": "hf_PL",
+    "PD": "hf_PA",
+}
+
 FX_SINA_MAP = {
     "USDCNY": "USDCNY", "EURCNY": "EURCNY", "GBPCNY": "GBPCNY",
     "JPYCNY": "JPYCNY", "HKDCNY": "HKDCNY", "AUDCNY": "AUDCNY",
@@ -80,7 +89,7 @@ def parse_command(full_command):
 
     valid_funcs = {"DES","INFO","QUOTE","TICK","DEPTH","CHART","GP","HOLIDAY"}
     valid_regions = {"US","SH","SZ","HK","SG","JP","CN","GB","BA","CNY"}
-    valid_cates = {"stock","future","forex","indices","fund","crypto"}
+    valid_cates = {"stock","future","forex","indices","fund","crypto","gold"}
 
     func = func if func in valid_funcs else "DES"
     region = region if region in valid_regions else "US"
@@ -105,10 +114,6 @@ def _sina_symbol(code, region, category):
 
 
 def _fx_symbol(code, region):
-    """
-    返回 (symbol, need_inverse)
-    need_inverse=True 表示新浪接口方向与用户请求相反，需要取倒数
-    """
     c1 = _to_currency(code)
     c2 = _to_currency(region)
     pair = f"{c1}{c2}"
@@ -121,7 +126,6 @@ def _fx_symbol(code, region):
 
 
 def _inverse_fx(data):
-    """对汇率数据取倒数（方向反转）"""
     try:
         for key in ["ld", "o"]:
             v = data.get(key)
@@ -130,7 +134,6 @@ def _inverse_fx(data):
                 if f != 0:
                     data[key] = str(round(1.0 / f, 4))
 
-        # 最高最低互换后取倒数
         h, l = data.get("h"), data.get("l")
         if h and l:
             h_f, l_f = float(h), float(l)
@@ -138,7 +141,6 @@ def _inverse_fx(data):
                 data["h"] = str(round(1.0 / l_f, 4))
                 data["l"] = str(round(1.0 / h_f, 4))
 
-        # 买卖价取倒数并互换（买变卖，卖变买）
         b = data.get("b", [])
         a = data.get("a", [])
         if b and a and b[0].get("p") and a[0].get("p"):
@@ -148,7 +150,6 @@ def _inverse_fx(data):
                 data["b"] = [{"p": str(round(1.0 / a_f, 4)), "v": "N/A"}]
                 data["a"] = [{"p": str(round(1.0 / b_f, 4)), "v": "N/A"}]
 
-        # 涨跌额/涨跌幅方向反转后无法简单换算，置 N/A
         data["ch"] = "N/A"
         data["chp"] = "N/A"
     except Exception:
@@ -173,6 +174,32 @@ def _fetch_sina_quote(symbol):
         return content.split(',')
     except Exception:
         return None
+
+
+def _parse_gold_sina(parts):
+    if not parts or len(parts) < 8:
+        return None
+    try:
+        last = float(parts[1]) if parts[1] else 0
+        yc = float(parts[7]) if len(parts) > 7 and parts[7] else last
+        ch = round(last - yc, 2)
+        chp = round(ch / yc * 100, 2) if yc != 0 else 0
+    except:
+        ch, chp = 0, 0
+
+    return {
+        "n": parts[0] if parts[0] else "\u9ec4\u91d1",
+        "ld": parts[1] if len(parts) > 1 else "",
+        "o": parts[8] if len(parts) > 8 else (parts[7] if len(parts) > 7 else ""),
+        "h": parts[4] if len(parts) > 4 else "",
+        "l": parts[5] if len(parts) > 5 else "",
+        "ch": str(ch),
+        "chp": f"{chp}%",
+        "v": parts[9] if len(parts) > 9 else "N/A",
+        "t": f"{parts[12]} {parts[13]}" if len(parts) > 13 else (parts[6] if len(parts) > 6 else ""),
+        "b": [{"p": parts[2] if len(parts) > 2 else "", "v": parts[10] if len(parts) > 10 else "N/A"}],
+        "a": [{"p": parts[3] if len(parts) > 3 else "", "v": parts[11] if len(parts) > 11 else "N/A"}],
+    }
 
 
 def _parse_a_stock(parts):
@@ -413,14 +440,14 @@ def _fetch_fx_boc(base, target):
         if df.empty:
             return None
         latest = df.iloc[-1]
-        date_str = str(latest.get("日期", ""))
+        date_str = str(latest.get("\u65e5\u671f", ""))
 
         boc_map = {
-            "USD": "美元", "EUR": "欧元", "JPY": "日元", "GBP": "英镑",
-            "HKD": "港币", "AUD": "澳大利亚元", "CAD": "加拿大元",
-            "SGD": "新加坡元", "CHF": "瑞士法郎", "KRW": "韩国元",
-            "THB": "泰国铢", "RUB": "卢布", "NZD": "新西兰元",
-            "CNY": "人民币"
+            "USD": "\u7f8e\u5143", "EUR": "\u6b27\u5143", "JPY": "\u65e5\u5143", "GBP": "\u82f1\u9551",
+            "HKD": "\u6e2f\u5e01", "AUD": "\u6fb3\u5927\u5229\u4e9a\u5143", "CAD": "\u52a0\u62ff\u5927\u5143",
+            "SGD": "\u65b0\u52a0\u5761\u5143", "CHF": "\u745e\u58eb\u6cd5\u90ce", "KRW": "\u97e9\u56fd\u5143",
+            "THB": "\u6cf0\u56fd\u94e2", "RUB": "\u5362\u5e03", "NZD": "\u65b0\u897f\u5170\u5143",
+            "CNY": "\u4eba\u6c11\u5e01"
         }
         base_name = boc_map.get(base, base)
         target_name = boc_map.get(target, target)
@@ -477,6 +504,31 @@ def _fetch_fx_fallback(code, region):
     return None
 
 
+def _fetch_gold_akshare():
+    if not AKSHARE_OK:
+        return None
+    try:
+        df = ak.spot_golden_benchmark_sge()
+        if df.empty:
+            return None
+        latest = df.iloc[-1]
+        return {
+            "n": "\u4e0a\u6d77\u91d1(Au99.99)",
+            "ld": str(latest.get("\u4ef7\u683c", "")),
+            "o": str(latest.get("\u4ef7\u683c", "")),
+            "h": str(latest.get("\u4ef7\u683c", "")),
+            "l": str(latest.get("\u4ef7\u683c", "")),
+            "ch": "0",
+            "chp": "0%",
+            "v": "N/A",
+            "t": str(latest.get("\u65e5\u671f", "")),
+            "b": [{"p": str(latest.get("\u4ef7\u683c", "")), "v": "N/A"}],
+            "a": [{"p": str(latest.get("\u4ef7\u683c", "")), "v": "N/A"}],
+        }
+    except Exception:
+        return None
+
+
 def req(path, **kw):
     code = kw.get("code", "")
     region = kw.get("region", "US")
@@ -493,6 +545,8 @@ def req(path, **kw):
             cat = "indices"
         elif path.startswith("fund/"):
             cat = "fund"
+        elif path.startswith("gold/"):
+            cat = "gold"
 
     if cat == "future":
         if not AKSHARE_OK:
@@ -528,15 +582,15 @@ def req(path, **kw):
                     return {"code": -1, "data": None}
                 row = df.iloc[0]
                 data = {
-                    "n": str(row.get("名称", code)),
-                    "ld": str(row.get("最新价", "")),
-                    "o": str(row.get("开盘价", "")),
-                    "h": str(row.get("最高价", "")),
-                    "l": str(row.get("最低价", "")),
-                    "ch": str(row.get("涨跌额", "")),
-                    "chp": f"{row.get('涨跌幅', '')}%" if pd.notna(row.get('涨跌幅')) else "",
-                    "v": str(row.get("持仓量", "")),
-                    "t": f"{row.get('日期', '')} {row.get('行情时间', '')}",
+                    "n": str(row.get("\u540d\u79f0", code)),
+                    "ld": str(row.get("\u6700\u65b0\u4ef7", "")),
+                    "o": str(row.get("\u5f00\u76d8\u4ef7", "")),
+                    "h": str(row.get("\u6700\u9ad8\u4ef7", "")),
+                    "l": str(row.get("\u6700\u4f4e\u4ef7", "")),
+                    "ch": str(row.get("\u6da8\u8dcc\u989d", "")),
+                    "chp": f"{row.get('\u6da8\u8dcc\u5e45', '')}%" if pd.notna(row.get('\u6da8\u8dcc\u5e45')) else "",
+                    "v": str(row.get("\u6301\u4ed3\u91cf", "")),
+                    "t": f"{row.get('\u65e5\u671f', '')} {row.get('\u884c\u60c5\u65f6\u95f4', '')}",
                     "b": [], "a": []
                 }
                 return {"code": 0, "data": data}
@@ -574,26 +628,42 @@ def req(path, **kw):
             df = ak.crypto_js_spot()
             if df.empty:
                 return {"code": -1, "data": None}
-            mask = df["交易品种"].str.contains(code, case=False, na=False)
+            mask = df["\u4ea4\u6613\u54c1\u79cd"].str.contains(code, case=False, na=False)
             matched = df[mask]
             if matched.empty:
                 return {"code": -1, "data": None}
             row = matched.iloc[0]
             data = {
-                "n": str(row.get("交易品种", code)),
-                "ld": str(row.get("最近报价", "")),
+                "n": str(row.get("\u4ea4\u6613\u54c1\u79cd", code)),
+                "ld": str(row.get("\u6700\u8fd1\u62a5\u4ef7", "")),
                 "o": "",
-                "h": str(row.get("24小时最高", "")),
-                "l": str(row.get("24小时最低", "")),
-                "ch": str(row.get("涨跌额", "")),
-                "chp": f"{row.get('涨跌幅', '')}%" if pd.notna(row.get('涨跌幅')) else "",
-                "v": str(row.get("24小时成交量", "")),
-                "t": str(row.get("更新时间", "")),
+                "h": str(row.get("24\u5c0f\u65f6\u6700\u9ad8", "")),
+                "l": str(row.get("24\u5c0f\u65f6\u6700\u4f4e", "")),
+                "ch": str(row.get("\u6da8\u8dcc\u989d", "")),
+                "chp": f"{row.get('\u6da8\u8dcc\u5e45', '')}%" if pd.notna(row.get('\u6da8\u8dcc\u5e45')) else "",
+                "v": str(row.get("24\u5c0f\u65f6\u6210\u4ea4\u91cf", "")),
+                "t": str(row.get("\u66f4\u65b0\u65f6\u95f4", "")),
                 "b": [], "a": []
             }
             return {"code": 0, "data": data}
         except Exception:
             return {"code": -1, "data": None}
+
+    elif cat == "gold":
+        symbol = GOLD_SINA_MAP.get(code.upper(), "hf_GC")
+        parts = _fetch_sina_quote(symbol)
+        data = None
+        if parts is not None:
+            data = _parse_gold_sina(parts)
+
+        if data is None and region in ("CN", "SH", "SZ", "CNY"):
+            data = _fetch_gold_akshare()
+
+        if data is None:
+            return {"code": -1, "data": None}
+        if "kline" in path:
+            return {"code": -1, "data": None}
+        return {"code": 0, "data": data}
 
     symbol = _sina_symbol(code, region, cat)
 
@@ -644,7 +714,8 @@ def get_stock_quote(full_command):
             "forex": "forex",
             "indices": "indices",
             "fund": "fund",
-            "crypto": "crypto"
+            "crypto": "crypto",
+            "gold": "gold"
         }.get(cat, "stock")
 
         if func in ("DES", "INFO"):
@@ -715,7 +786,8 @@ def get_stock_chart(full_command):
         "forex": "forex",
         "indices": "indices",
         "fund": "fund",
-        "crypto": "crypto"
+        "crypto": "crypto",
+        "gold": "gold"
     }.get(cat, "stock")
     j = req(f"{route}/kline", region=region, code=code, kType=8, limit=60)
     data = j.get("data")

@@ -65,6 +65,11 @@ class OpenTerminal(App):
         with Horizontal():
             with Container(id="sidebar"):
                 yield Static(
+                    "[bold]KINDS[bold]\n"
+                    " AU: Gold (Gold)\n"
+                    " AG: Silver (Gold)\n"
+                    " PT: Platinum (Gold)\n"
+                    " PD: Palladium (Gold)\n"
                     "[bold]REGIONS[bold]\n"
                     " US: United States of America\n"
                     " SH: Shanghai China\n"
@@ -73,6 +78,7 @@ class OpenTerminal(App):
                     " BA: Blockchain (Crypto)\n"
                     "[bold]MARKETS[bold]\n"
                     " STOCK: Stock Equity\n"
+                    " GOLD: Gold\n"
                     " FOREX: Foreign Exchange\n"
                     " INDICES: Indices\n"
                     " FUTURE: Futures\n"
