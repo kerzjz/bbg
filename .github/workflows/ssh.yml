@@ -28,14 +28,13 @@ jobs:
         run: |
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
-          SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}' | sed 's/^ssh //')
           echo "SSH_CMD=$SSH" >> $GITHUB_ENV
 
-      - name: 生成纯文本首页（只输出地址，不带ssh）
+      - name: 生成纯文本首页
         run: |
           mkdir -p public
-          # 关键：只保留 xxx@xxx.tmate.io，自动去掉前面的 ssh 
-          echo "${{ env.SSH_CMD }}" | sed 's/^ssh //' > public/index.html
+          echo "${{ env.SSH_CMD }}" > public/index.html
 
       - name: 部署到 Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -46,5 +45,9 @@ jobs:
           publish_branch: gh-pages
           allow_empty_commit: true
 
-      - name: 保持运行24h
-        run: sleep 1430m
+      # 🔥 关键修复：代替 sleep，监听 tmate 状态，断开自动结束 Job
+      - name: 保持连接（断开自动重启）
+        run: |
+          while tmate -S /tmp/tmate.sock has-session; do
+            sleep 1
+          done
