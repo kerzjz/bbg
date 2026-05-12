@@ -1,14 +1,37 @@
 name: Auto SSH 24h
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 */6 * * *"
   workflow_dispatch:
 
 jobs:
   tmate:
     runs-on: ubuntu-latest
-    timeout-minutes: 1430
+    timeout-minutes: 350
     steps:
+      - name: 禁区时间判断
+        run: |
+          set -e
+          # 北京时间 小时、星期 1=周一 7=周日
+          BJ_H=$(date -d '+8 hour' +%H)
+          WK=$(date -d '+8 hour' +%u)
+
+          # 每日禁区 02:00–06:00
+          if [ $BJ_H -ge 2 ] && [ $BJ_H -lt 6 ]; then
+            echo "当前在每日禁区，不启动SSH"
+            exit 0
+          fi
+
+          # 周一~周五 08:00–12:00 14:00–18:00
+          if [ $WK -ge 1 ] && [ $WK -le 5 ]; then
+            if ([ $BJ_H -ge 8 ] && [ $BJ_H -lt 12 ]) || ([ $BJ_H -ge 14 ] && [ $BJ_H -lt 18 ]); then
+              echo "当前在工作日禁区，不启动SSH"
+              exit 0
+            fi
+          fi
+
+          echo "非禁区，正常启动SSH常驻"
+
       - uses: actions/checkout@v4
 
       - name: Setup Python
@@ -45,8 +68,7 @@ jobs:
           publish_branch: gh-pages
           allow_empty_commit: true
 
-      # 🔥 关键修复：代替 sleep，监听 tmate 状态，断开自动结束 Job
-      - name: 保持连接（断开自动重启）
+      - name: 保持连接（断开自动结束Job）
         run: |
           while tmate -S /tmp/tmate.sock has-session; do
             sleep 1
