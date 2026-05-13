@@ -44,7 +44,7 @@ from textual import on
 from rich.text import Text
 
 # Import local modules
-from modules import stocks
+from modules import stocks, rss
 
 WELCOME_LOGO = """
 BLOOMBERG TERMINAL FREE (OPEN-TERMINAL)
