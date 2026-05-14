@@ -7,3 +7,4 @@ plotext>=5.0.0
 # 可选依赖（期货/外汇/加密货币功能）
 akshare>=1.10.0
 pandas>=1.0.0
+feedparser
