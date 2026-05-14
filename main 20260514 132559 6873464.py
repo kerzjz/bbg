@@ -45,7 +45,7 @@ from textual import on
 from rich.text import Text
 
 # Import local modules
-from modules import stocks, rss  # 确保 rss 模块已正确导入
+from modules import stocks, rss
 
 WELCOME_LOGO = """
 BLOOMBERG TERMINAL FREE (OPEN-TERMINAL)
@@ -91,9 +91,6 @@ class OpenTerminal(App):
                     " QUOTE: Real-Time Quote\n"
                     " TICK: Tick Data\n"
                     " DEPTH: Order Book Depth\n"
-                    "[bold]RSS COMMANDS[bold]\n"
-                    " RSS LIST: Show all RSS sources\n"
-                    " RSS [CODE] [LIMIT]: Get news (e.g. RSS SINA 5)\n"
                 )
             
             with Vertical(id="main-window"):
@@ -122,46 +119,8 @@ class OpenTerminal(App):
 
         cmd = parts[0]
 
-        # ========== 优先处理 RSS 指令 ==========
-        if cmd == "RSS":
-            if len(parts) == 1:
-                # 仅输入 RSS，提示用法
-                log.write("[bold yellow]⚠️ RSS Usage:[/bold yellow]\n"
-                          "  RSS LIST - Show all available RSS sources\n"
-                          "  RSS [CODE] [LIMIT] - Get news (e.g. RSS SINA 5)")
-            elif parts[1] == "LIST":
-                # 显示 RSS 源列表
-                rss_table = rss.get_rss_source_table()
-                log.write(rss_table)
-            else:
-                # 解析 RSS 源和条数
-                source_code = parts[1] if len(parts) >= 2 else ""
-                limit = parts[2] if len(parts) >= 3 else 10
-                news = rss.get_rss_news(source_code, limit)
-                log.write(news)
-            return  # 终止后续解析，避免进入股票逻辑
-
-        # ========== 原有指令逻辑 ==========
         if cmd == "HELP":
-            help_text = """
-[bold green]📖 OPEN-TERMINAL HELP[/bold green]
-[bold]Basic Commands:[/bold]
-  HELP - Show this help message
-  CLS - Clear screen
-  EXIT/QUIT - Exit the terminal
-[bold]RSS Commands:[/bold]
-  RSS LIST - Show all available RSS news sources
-  RSS [CODE] [LIMIT] - Get news from specified source (e.g. RSS SINA 5)
-[bold]Stock/Forex/Gold Commands:[/bold]
-  [CODE] [REGION] [FUNC] - Basic query (e.g. AAPL US QUOTE)
-  [CODE] [FUNC] - Quick query (e.g. 600000 SH DES, BTC BA QUOTE)
-[bold]Functions:[/bold]
-  DES/INFO - Basic information
-  QUOTE - Real-time quote
-  CHART/GP - K-line chart
-  TICK - Tick data
-  DEPTH - Order book depth
-            """
+            help_text = """todo"""
             log.write(help_text)
 
         elif cmd == "CLS":
