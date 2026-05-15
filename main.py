@@ -1,6 +1,9 @@
-# ====================== SSH/tmate 终端自动修复（云端自动开，本地自动关）======================
-# import os
+import ctypes
+ctypes.windll.kernel32.SetConsoleTitleW(
+    "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic"
+)
 
+# ====================== SSH/tmate 终端自动修复（云端自动开，本地自动关）======================
 # 只有在 GitHub Actions / Linux 云端环境才执行，本地 Windows 绝对不跑！
 # if os.environ.get("GITHUB_ACTIONS") == "true" or os.name != "nt":
 #     print("✅ 检测到云端环境，自动启用 tmate / 终端修复")
@@ -66,11 +69,13 @@ class OpenTerminal(App):
         with Horizontal():
             with Container(id="sidebar"):
                 yield Static(
-                    "[bold]KINDS[bold]\n"
+                    "[bold]SEARCH: {PRODUCT} {REGION} {MARKET} {FUNCTION}[bold]\n"
+                    "[bold]PRODUCTS[bold]\n"
                     " AU: Gold (Gold)\n"
                     " AG: Silver (Gold)\n"
                     " PT: Platinum (Gold)\n"
                     " PD: Palladium (Gold)\n"
+                    " {SYMBOL}: PRODUCTS (Stock, Forex, Indices, Future, Fund, Crypto)\n"
                     "[bold]REGIONS[bold]\n"
                     " US: United States of America\n"
                     " SH: Shanghai China\n"
@@ -93,7 +98,7 @@ class OpenTerminal(App):
                     " DEPTH: Order Book Depth\n"
                     "[bold]RSS COMMANDS[bold]\n"
                     " RSS LIST: Show all RSS sources\n"
-                    " RSS [CODE] [LIMIT]: Get news (e.g. RSS SINA 5)\n"
+                    " RSS [CODE]: Get news (e.g. RSS NTS)\n"
                 )
             
             with Vertical(id="main-window"):
