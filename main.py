@@ -1,7 +1,10 @@
-import ctypes
-ctypes.windll.kernel32.SetConsoleTitleW(
-    "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic"
-)
+import sys
+if sys.platform == "win32":
+    import ctypes
+    ctypes.windll.kernel32.SetConsoleTitleW("BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic")
+else:
+    print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic\a", end="")
+
 # ====================== SSH/tmate 终端自动修复（云端自动开，本地自动关）======================
 # if os.environ.get("GITHUB_ACTIONS") == "true" or os.name != "nt":
 #     print("✅ 检测到云端环境，自动启用 tmate / 终端修复")
