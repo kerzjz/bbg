@@ -27,7 +27,7 @@ def auto_install(packages):
                 print("[INFO] Termux 环境：跳过 mini‑racer，无依赖安装 akshare")
                 subprocess.check_call([
                     sys.executable, "-m", "pip", "install", pkg, "--no-deps",
-                    "-q", "--no-cache-dir", "--disable-pip-version-check"
+                    "--no-cache-dir", "--disable-pip-version-check"
                 ])
                 # 手动安装 akshare 必需依赖（排除无法编译的 mini‑racer）
                 dep_list = [
@@ -44,13 +44,13 @@ def auto_install(packages):
                     except ImportError:
                         subprocess.check_call([
                             sys.executable, "-m", "pip", "install", dep,
-                            "-q", "--no-cache-dir", "--disable-pip-version-check"
+                             "--no-cache-dir", "--disable-pip-version-check"
                         ])
             else:
                 # Windows / Linux / macOS 正常安装
                 subprocess.check_call([
                     sys.executable, "-m", "pip", "install", pkg,
-                    "-q", "--no-cache-dir", "--disable-pip-version-check"
+                    "--no-cache-dir", "--disable-pip-version-check"
                 ])
 
 auto_install([
