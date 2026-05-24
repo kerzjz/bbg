@@ -10,8 +10,9 @@ else:
 
 # 判断是否为 Termux (Android) 环境
 IS_TERMUX = sys.platform == "linux" and os.path.exists("/data/data/com.termux")
+print(f"[INFO] Termux 环境检测: {IS_TERMUX}")
 
-# ====================== 自动安装依赖（全平台兼容：Termux跳过mini‑racer，其他正常）======================
+# ====================== 自动安装依赖（关闭静默，全可见输出，Termux跳过mini‑racer）======================
 import subprocess
 import asyncio
 
@@ -20,16 +21,17 @@ def auto_install(packages):
         pkg_name = pkg.split(">=")[0]
         try:
             __import__(pkg_name)
+            print(f"[OK] {pkg_name} 已安装，跳过")
             continue
         except ImportError:
-            # Termux 特殊处理 akshare：跳过 mini‑racer，手动安装依赖
+            # Termux 专用：无依赖安装 akshare，完全避开 mini‑racer
             if IS_TERMUX and pkg_name == "akshare":
-                print("[INFO] Termux 环境：跳过 mini‑racer，无依赖安装 akshare")
+                print("\n[INFO] === TERMUX 模式：无依赖安装 akshare，跳过 mini‑racer ===")
                 subprocess.check_call([
                     sys.executable, "-m", "pip", "install", pkg, "--no-deps",
                     "--no-cache-dir", "--disable-pip-version-check"
                 ])
-                # 手动安装 akshare 必需依赖（排除无法编译的 mini‑racer）
+                # 手动安装 akshare 必需依赖（排除 mini‑racer）
                 dep_list = [
                     "beautifulsoup4>=4.9.1", "lxml>=4.2.1", "pandas>=2.0.0",
                     "requests>=2.22.0", "curl_cffi>=0.13.0", "html5lib>=1.0.1",
@@ -38,16 +40,17 @@ def auto_install(packages):
                     "webencodings", "et-xmlfile"
                 ]
                 for dep in dep_list:
-                    dep_name = dep.split(">=")[0]
+                    d_name = dep.split(">=")[0]
                     try:
-                        __import__(dep_name)
+                        __import__(d_name)
                     except ImportError:
                         subprocess.check_call([
                             sys.executable, "-m", "pip", "install", dep,
-                             "--no-cache-dir", "--disable-pip-version-check"
+                            "--no-cache-dir", "--disable-pip-version-check"
                         ])
             else:
-                # Windows / Linux / macOS 正常安装
+                # Windows / Linux / macOS 正常完整安装
+                print(f"\n[INSTALL] 正常安装 {pkg}")
                 subprocess.check_call([
                     sys.executable, "-m", "pip", "install", pkg,
                     "--no-cache-dir", "--disable-pip-version-check"
@@ -70,7 +73,7 @@ from textual import on
 from textual.keys import Keys
 from rich.text import Text
 # Import local modules
-from modules import stocks, rss  # 确保 rss 模块已正确导入
+from modules import stocks, rss
 WELCOME_LOGO = """
 BLOOMBERG TERMINAL FREE (OPEN-TERMINAL)
 2026 © Ker ZJZ Global Economic | Some Rights Reserved
@@ -82,7 +85,6 @@ Third-party APIs & Open-Source Components belong to their respective owners.
 class OpenTerminal(App):
     TITLE = "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic"
 
-    # 只加这三行
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.command_history = []
@@ -91,7 +93,6 @@ class OpenTerminal(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-
         with Horizontal():
             with Container(id="sidebar"):
                 yield Static(
@@ -126,18 +127,16 @@ class OpenTerminal(App):
                     " RSS LIST: Show all RSS sources\n"
                     " RSS [CODE]: Get news (e.g. RSS NTS)\n"
                 )
-
             with Vertical(id="main-window"):
                 yield RichLog(id="output_log", markup=True, wrap=True)
-
         yield Input(placeholder="COMMAND LINE > Type ticker or command...", id="command_input")
         yield Footer()
+
     def on_mount(self):
         log = self.query_one("#output_log", RichLog)
         log.write(Text(WELCOME_LOGO, style="bold orange1"))
         self.query_one("#command_input").focus()
 
-    # 👇 修复后：正确的上下箭头监听（唯一改动点）
     def on_key(self, event):
         input_widget = self.query_one("#command_input", Input)
         if self.focused == input_widget:
@@ -146,7 +145,6 @@ class OpenTerminal(App):
             elif event.key == Keys.Down:
                 self.navigate_history(-1)
 
-    # 只加这个方法
     def navigate_history(self, direction):
         inp = self.query_one("#command_input")
         if self.history_index == -1 and direction == 1:
@@ -168,39 +166,28 @@ class OpenTerminal(App):
         command = event.value.upper().strip()
         input_widget = self.query_one("#command_input")
         log = self.query_one("#output_log", RichLog)
-
-        # 只加保存历史
         if command and (not self.command_history or self.command_history[0] != command):
             self.command_history.insert(0, command)
         self.history_index = -1
         self.temp_input = ""
-
         input_widget.value = ""
         log.write(f"\n[reverse] COMMAND [/reverse] {command}")
-
         parts = command.split()
         if not parts:
             return
         cmd = parts[0]
-        # ========== 优先处理 RSS 指令 ==========
         if cmd == "RSS":
             if len(parts) == 1:
-                # 仅输入 RSS，提示用法
-                log.write("[bold yellow]⚠️ RSS Usage:[/bold yellow]\n"
-                          "  RSS LIST - Show all available RSS sources\n"
-                          "  RSS [CODE] [LIMIT] - Get news (e.g. RSS SINA 5)")
+                log.write("[bold yellow]⚠️ RSS Usage:[/bold yellow]\n  RSS LIST - Show all available RSS sources\n  RSS [CODE] [LIMIT] - Get news (e.g. RSS SINA 5)")
             elif parts[1] == "LIST":
-                # 显示 RSS 源列表
                 rss_table = rss.get_rss_source_table()
                 log.write(rss_table)
             else:
-                # 解析 RSS 源和条数
                 source_code = parts[1] if len(parts) >= 2 else ""
                 limit = parts[2] if len(parts) >= 3 else 10
                 news = rss.get_rss_news(source_code, limit)
                 log.write(news)
-            return  # 终止后续解析，避免进入股票逻辑
-        # ========== 原有指令逻辑 ==========
+            return
         if cmd == "HELP":
             help_text = """
 [bold green]📖 OPEN-TERMINAL HELP[/bold green]
@@ -238,7 +225,7 @@ class OpenTerminal(App):
                     log.write(Text(chart))
             else:
                 log.write(stocks.get_stock_quote(full_command))
-# ====================== ✅ 核心修复：异步启动 ======================
+# ====================== ✅ 异步启动 ======================
 if __name__ == "__main__":
     async def main():
         app = OpenTerminal()
