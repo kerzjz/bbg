@@ -1,33 +1,58 @@
 import sys
+import os
+
+# 终端标题全平台兼容
 if sys.platform == "win32":
     import ctypes
     ctypes.windll.kernel32.SetConsoleTitleW("BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic")
 else:
     print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic\a", end="")
 
-# ====================== SSH/tmate 终端自动修复（云端自动开，本地自动关）======================
-# if os.environ.get("GITHUB_ACTIONS") == "true" or os.name != "nt":
-#     print("✅ 检测到云端环境，自动启用 tmate / 终端修复")
-#     os.environ["TERM"] = "xterm-256color"
-#     os.system("tmate set mouse on 2>/dev/null")
-# else:
-#     print("✅ 检测到本地 Windows 环境，跳过 tmate 配置，不炸终端！")
-# ==========================================================================================
-# ====================== 自动安装依赖（已存在自动跳过）======================
+# 判断是否为 Termux (Android) 环境
+IS_TERMUX = sys.platform == "linux" and os.path.exists("/data/data/com.termux")
+
+# ====================== 自动安装依赖（全平台兼容：Termux跳过mini‑racer，其他正常）======================
 import subprocess
-import sys
 import asyncio
+
 def auto_install(packages):
     for pkg in packages:
-        pkg_name = pkg.split("=")[0].split(">")[0]
+        pkg_name = pkg.split(">=")[0]
         try:
             __import__(pkg_name)
             continue
         except ImportError:
-            subprocess.check_call([
-                sys.executable, "-m", "pip", "install", pkg,
-                "-q", "--no-cache-dir", "--disable-pip-version-check"
-            ])
+            # Termux 特殊处理 akshare：跳过 mini‑racer，手动安装依赖
+            if IS_TERMUX and pkg_name == "akshare":
+                print("[INFO] Termux 环境：跳过 mini‑racer，无依赖安装 akshare")
+                subprocess.check_call([
+                    sys.executable, "-m", "pip", "install", pkg, "--no-deps",
+                    "-q", "--no-cache-dir", "--disable-pip-version-check"
+                ])
+                # 手动安装 akshare 必需依赖（排除无法编译的 mini‑racer）
+                dep_list = [
+                    "beautifulsoup4>=4.9.1", "lxml>=4.2.1", "pandas>=2.0.0",
+                    "requests>=2.22.0", "curl_cffi>=0.13.0", "html5lib>=1.0.1",
+                    "xlrd>=1.2.0", "tqdm>=4.43.0", "openpyxl>=3.0.3",
+                    "jsonpath>=0.82", "tabulate>=0.8.6", "decorator>=4.4.2",
+                    "webencodings", "et-xmlfile"
+                ]
+                for dep in dep_list:
+                    dep_name = dep.split(">=")[0]
+                    try:
+                        __import__(dep_name)
+                    except ImportError:
+                        subprocess.check_call([
+                            sys.executable, "-m", "pip", "install", dep,
+                            "-q", "--no-cache-dir", "--disable-pip-version-check"
+                        ])
+            else:
+                # Windows / Linux / macOS 正常安装
+                subprocess.check_call([
+                    sys.executable, "-m", "pip", "install", pkg,
+                    "-q", "--no-cache-dir", "--disable-pip-version-check"
+                ])
+
 auto_install([
     "textual>=0.40.0",
     "rich>=13.0.0",
@@ -66,7 +91,7 @@ class OpenTerminal(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        
+
         with Horizontal():
             with Container(id="sidebar"):
                 yield Static(
@@ -101,10 +126,10 @@ class OpenTerminal(App):
                     " RSS LIST: Show all RSS sources\n"
                     " RSS [CODE]: Get news (e.g. RSS NTS)\n"
                 )
-            
+
             with Vertical(id="main-window"):
                 yield RichLog(id="output_log", markup=True, wrap=True)
-                
+
         yield Input(placeholder="COMMAND LINE > Type ticker or command...", id="command_input")
         yield Footer()
     def on_mount(self):
@@ -143,7 +168,7 @@ class OpenTerminal(App):
         command = event.value.upper().strip()
         input_widget = self.query_one("#command_input")
         log = self.query_one("#output_log", RichLog)
-        
+
         # 只加保存历史
         if command and (not self.command_history or self.command_history[0] != command):
             self.command_history.insert(0, command)
@@ -152,7 +177,7 @@ class OpenTerminal(App):
 
         input_widget.value = ""
         log.write(f"\n[reverse] COMMAND [/reverse] {command}")
-        
+
         parts = command.split()
         if not parts:
             return
