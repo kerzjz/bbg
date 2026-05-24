@@ -8,11 +8,11 @@ if sys.platform == "win32":
 else:
     print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic\a", end="")
 
-# 判断是否为 Termux (Android) 环境
-IS_TERMUX = sys.platform == "linux" and os.path.exists("/data/data/com.termux")
+# 【修复】新版Termux 100%精准检测
+IS_TERMUX = 'TERMUX_VERSION' in os.environ or os.path.exists("/data/data/com.termux/files/usr/bin/python")
 print(f"[INFO] Termux 环境检测: {IS_TERMUX}")
 
-# ====================== 自动安装依赖（关闭静默，全可见输出，Termux跳过mini‑racer）======================
+# ====================== 自动安装依赖（关闭静默，Termux强制跳过mini‑racer）======================
 import subprocess
 import asyncio
 
