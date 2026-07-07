@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0--beta-blue)](https://github.com/kerzjz/bbg)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Win%20%7C%20Mac%20%7C%20Linux%20%7C%20Termux-lightgrey)](https://github.com/kerzjz/bbg)
 
 基于 [bloomberg-terminal-free/bloomberg-terminal-free](https://github.com/bloomberg-terminal-free/bloomberg-terminal-free) 进行深度二次开发的终端金融数据仪表盘。
