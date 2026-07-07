@@ -13,6 +13,16 @@ RSS_SOURCE_POOL = {
 #     "BBG": "https://bloombergnew.buzzing.cc/feed.xml",
 #     "FCB": "https://plink.anyfeeder.com/fortunechina/shangye", 
 #     "FTCN": "https://www.ftchinese.com/rss/feed"
+    "JMFIN": "https://plink.anyfeeder.com/jiemian/finance",
+    "JMBIZ": "https://plink.anyfeeder.com/jiemian/business",
+    "CNFIN": "https://www.chinanews.com.cn/rss/finance.xml",
+    "JJRB": "https://plink.anyfeeder.com/jingjiribao",
+    "FTNCNTECH": "https://plink.anyfeeder.com/fortunechina/keji",
+    "FTNCNBIZ": "https://plink.anyfeeder.com/fortunechina/shangye",
+    "36KR": "https://36kr.com/feed",
+    "LP": "https://supsub.net/feed/public/ff29ec00/rss",
+    "DPTFIN": "https://plink.anyfeeder.com/dapenti/caijing",
+    "FTNCN": "https://plink.anyfeeder.com/fortunechina"
 }
 
 def get_rss_source_table():
@@ -27,25 +37,35 @@ def get_rss_source_table():
         url_lower = url.lower()  # 统一转小写，只执行一次
         if "huxiu" in url_lower:
             name = "虎嗅"
-#         elif "economist" in url_lower:
-#             name = "经济学人"
         elif "wallstreetcn" in url_lower:
             name = "华尔街见闻"
         elif "newtimespace" in url_lower:
             name = "新时空"
-#         elif "hexun" in url_lower: # 停更了
-#             name = "和讯"    
-#         elif "bloomberg" in url_lower:  # 更精准
-#             name = "彭博社"
-#         elif "fortunechina" in url_lower:  # ✅ 修复这里
-#             name = "商业 - 财富中文网"
-#         elif "ftchinese" in url_lower:     # ✅ 修复这里
-#             name = "FTChinese"    
+        elif "jiemian/finance" in url_lower:
+            name = "界面新闻-财经"
+        elif "jiemian/business" in url_lower:
+            name = "界面新闻-商业"
+        elif "chinanews.com.cn" in url_lower:
+            name = "中国新闻网-财经"
+        elif "jingjiribao" in url_lower:
+            name = "经济日报"
+        elif "fortunechina/keji" in url_lower:
+            name = "财富中文网-科技"
+        elif "fortunechina/shangye" in url_lower:
+            name = "财富中文网-商业"
+        elif "36kr" in url_lower:
+            name = "36氪"
+        elif "supsub.net" in url_lower:
+            name = "晚点LatePost"
+        elif "dapenti/caijing" in url_lower:
+            name = "喷嚏网-财经"
+        elif "fortunechina" in url_lower:
+            name = "财富中文网-全站"
         else:
             name = "未知财经源"
         table.add_row(code, name, url)
     return table
-
+    
 def get_rss_news(source_code: str, limit: int = 10) -> str | Table:
     """
     获取RSS新闻
