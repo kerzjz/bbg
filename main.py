@@ -4,7 +4,7 @@ import os
 # 终端标题全平台兼容
 if sys.platform == "win32":
     import ctypes
-    ctypes.windll.kernel32.SetConsoleTitleW("BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic")
+    ctypes.windll.kernel32.SetConsoleTitleW("BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta")
 else:
     print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta\a", end="")
 
@@ -77,13 +77,14 @@ from modules import stocks, rss
 WELCOME_LOGO = """
 BLOOMBERG TERMINAL FREE (OPEN-TERMINAL)
 2026 © Ker ZJZ Global Economic | Some Rights Reserved
+v1.0-beta
 Third-party APIs & Open-Source Components belong to their respective owners.
  > SYSTEM READY.
  > CONNECTED TO: MARKET
  > TYPE 'HELP' FOR COMMANDS.
 """
 class OpenTerminal(App):
-    TITLE = "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic"
+    TITLE = "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
