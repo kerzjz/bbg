@@ -1,5 +1,9 @@
 import sys
 import os
+import subprocess
+import asyncio
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # 终端标题全平台兼容
 if sys.platform == "win32":
@@ -13,9 +17,6 @@ IS_TERMUX = 'TERMUX_VERSION' in os.environ or os.path.exists("/data/data/com.ter
 print(f"[INFO] Termux 环境检测: {IS_TERMUX}")
 
 # ====================== 自动安装依赖（关闭静默，Termux强制跳过mini‑racer）======================
-import subprocess
-import asyncio
-
 def auto_install(packages):
     for pkg in packages:
         pkg_name = pkg.split(">=")[0]
@@ -74,6 +75,24 @@ from textual.keys import Keys
 from rich.text import Text
 # Import local modules
 from modules import stocks, rss
+
+# 全球主流交易所时区配置 全部纳入
+MARKET_TIME_ZONE = [
+    ("CN", ZoneInfo("Asia/Shanghai"), "cyan"),        # 沪深京港
+    ("HK", ZoneInfo("Asia/Hong_Kong"), "skyblue"),    # 香港交易所
+    ("JP", ZoneInfo("Asia/Tokyo"), "gold"),           # 东京交易所
+    ("KR", ZoneInfo("Asia/Seoul"), "orange"),         # 韩国交易所
+    ("SG", ZoneInfo("Asia/Singapore"), "teal"),       # 新加坡交易所
+    ("IN", ZoneInfo("Asia/Kolkata"), "coral"),        # 印度孟买
+    ("UK", ZoneInfo("UTC"), "lime"),                 # 伦敦交易所 GMT
+    ("EU", ZoneInfo("Europe/Paris"), "violet"),       # 欧洲泛欧/德交所
+    ("CH", ZoneInfo("Europe/Zurich"), "slateblue"),   # 瑞士苏黎世
+    ("NY", ZoneInfo("America/New_York"), "magenta"),  # 纽约纽交所
+    ("CA", ZoneInfo("America/Toronto"), "pink"),      # 加拿大多伦多
+    ("BR", ZoneInfo("America/Sao_Paulo"), "brown"),   # 巴西圣保罗
+    ("AU", ZoneInfo("Australia/Sydney"), "springgreen") # 澳洲悉尼
+]
+
 WELCOME_LOGO = """
 BLOOMBERG TERMINAL FREE (OPEN-TERMINAL)
 2026 © Ker ZJZ Global Economic | Some Rights Reserved
@@ -83,6 +102,7 @@ Third-party APIs & Open-Source Components belong to their respective owners.
  > CONNECTED TO: MARKET
  > TYPE 'HELP' FOR COMMANDS.
 """
+
 class OpenTerminal(App):
     TITLE = "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta"
 
@@ -91,8 +111,10 @@ class OpenTerminal(App):
         self.command_history = []
         self.history_index = -1
         self.temp_input = ""
+        self.global_time_bar = Static("", markup=True)
 
     def compose(self) -> ComposeResult:
+        yield self.global_time_bar
         yield Header(show_clock=True)
         with Horizontal():
             with Container(id="sidebar"):
@@ -137,6 +159,29 @@ class OpenTerminal(App):
         log = self.query_one("#output_log", RichLog)
         log.write(Text(WELCOME_LOGO, style="bold orange1"))
         self.query_one("#command_input").focus()
+        self.set_interval(1, self.refresh_all_time)
+
+    def refresh_all_time(self):
+        # 获取本地时间与时区偏移
+        local_now = datetime.now().astimezone()
+        local_offset = local_now.utcoffset()
+
+        # 拼接时间字符串，自动剔除和本地时区一致的交易所时间
+        time_parts = []
+        for tag, tz, color in MARKET_TIME_ZONE:
+            market_now = datetime.now(tz)
+            market_offset = market_now.utcoffset()
+            # 时区一致则跳过不显示
+            if local_offset == market_offset:
+                continue
+            time_parts.append(f"[{color}]{tag}:{market_now.strftime('%H:%M:%S')}[/{color}]")
+
+        # 顶部全局市场时间栏
+        full_time_text = " | ".join(time_parts)
+        self.global_time_bar.update(f"{full_time_text}")
+
+        # 右上角标题固定格式 LocalTime. 时分秒
+        self.TITLE = f"LocalTime. {local_now.strftime('%H:%M:%S')} | BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta"
 
     def on_key(self, event):
         input_widget = self.query_one("#command_input", Input)
@@ -226,6 +271,7 @@ class OpenTerminal(App):
                     log.write(Text(chart))
             else:
                 log.write(stocks.get_stock_quote(full_command))
+
 # ====================== ✅ 异步启动 ======================
 if __name__ == "__main__":
     async def main():
