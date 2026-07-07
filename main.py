@@ -6,7 +6,7 @@ if sys.platform == "win32":
     import ctypes
     ctypes.windll.kernel32.SetConsoleTitleW("BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic")
 else:
-    print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic\a", end="")
+    print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta\a", end="")
 
 # 【修复】新版Termux 100%精准检测
 IS_TERMUX = 'TERMUX_VERSION' in os.environ or os.path.exists("/data/data/com.termux/files/usr/bin/python")
