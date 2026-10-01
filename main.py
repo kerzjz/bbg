@@ -8,9 +8,9 @@ from zoneinfo import ZoneInfo
 # 终端标题全平台兼容
 if sys.platform == "win32":
     import ctypes
-    ctypes.windll.kernel32.SetConsoleTitleW("BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta")
+    ctypes.windll.kernel32.SetConsoleTitleW("BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | v1.0-beta")
 else:
-    print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta\a", end="")
+    print("\033]0;BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | v1.0-beta\a", end="")
 
 # 【修复】新版Termux 100%精准检测
 IS_TERMUX = 'TERMUX_VERSION' in os.environ or os.path.exists("/data/data/com.termux/files/usr/bin/python")
@@ -95,7 +95,6 @@ MARKET_TIME_ZONE = [
 
 WELCOME_LOGO = """
 BLOOMBERG TERMINAL FREE (OPEN-TERMINAL)
-2026 © Ker ZJZ Global Economic | Some Rights Reserved
 v1.0-beta
 Third-party APIs & Open-Source Components belong to their respective owners.
  > SYSTEM READY.
@@ -104,7 +103,7 @@ Third-party APIs & Open-Source Components belong to their respective owners.
 """
 
 class OpenTerminal(App):
-    TITLE = "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta"
+    TITLE = "BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | v1.0-beta"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -181,7 +180,7 @@ class OpenTerminal(App):
         self.global_time_bar.update(f"{full_time_text}")
 
         # 右上角标题固定格式 LocalTime. 时分秒
-        self.TITLE = f"LocalTime. {local_now.strftime('%H:%M:%S')} | BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | Ker ZJZ Global Economic | v1.0-beta"
+        self.TITLE = f"LocalTime. {local_now.strftime('%H:%M:%S')} | BLOOMBERG TERMINAL FREE (OPEN-TERMINAL) | v1.0-beta"
 
     def on_key(self, event):
         input_widget = self.query_one("#command_input", Input)

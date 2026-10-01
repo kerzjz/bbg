@@ -5,10 +5,6 @@
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Win%20%7C%20Mac%20%7C%20Linux%20%7C%20Termux-lightgrey)](https://github.com/kerzjz/bbg)
 
-Modifications Copyright (c) 2026 Ker ZJZ
-These modifications are also‑licensed under the MIT‑License.
-Original code: bloomberg‑terminal‑app
-
 采用经典 Bloomberg 终端视觉风格，基于 Python [Textual](https://github.com/Textualize/textual) 框架构建，零订阅即可在命令行中实时查看全球股票、外汇、贵金属、期货及加密货币行情，并集成财经 RSS 新闻聚合。
 
 ---
@@ -103,7 +99,7 @@ bbg/
 │   └── rss.py           # RSS 新闻聚合模块
 ├── styles.tcss          # Textual CSS 样式定义（Bloomberg 经典主题）
 ├── requirements.txt     # Python 依赖列表
-├── LICENSE              # Apache 2.0 许可证
+├── LICENSE              # MIT 许可证
 └── README.md            # 本文件
 ```
 
@@ -134,11 +130,3 @@ bbg/
 本项目仅用于学习研究目的，所提供数据来源于公开互联网接口，不构成任何投资建议。金融市场有风险，决策需谨慎。
 
 ---
-
-## 📄 许可证
-
-本项目采用 [Apache License 2.0](LICENSE) 开源许可证。
-
----
-
-**© 2026 Ker ZJZ Global Economic** — Third-party APIs & Open-Source Components belong to their respective owners.
